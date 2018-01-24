@@ -38,6 +38,66 @@ class FaceDetector():
     def skew_angle(self):
         return None
 
+    def detect_face_without_check_skew_angle(self, image_file):
+        try:
+            with io.open(image_file, 'rb') as fd:
+                image = fd.read()
+                batch_request = [{
+                    'image': {
+                        'content': base64.b64encode(image).decode('utf-8')
+                    },
+                    'features': [
+                        {
+                            'type': 'FACE_DETECTION',
+                            'maxResults': MAX_FACE,
+                        },
+                        {
+                            'type': 'LABEL_DETECTION',
+                            'maxResults': MAX_LABEL,
+                        }
+                    ]
+                }]
+                fd.close()
+
+            request = self.service.images().annotate(body={
+                'requests': batch_request, })
+            response = request.execute()
+            if 'faceAnnotations' not in response['responses'][0]:
+                print('[Error] %s: Cannot find face ' % image_file)
+                return None
+
+            face = response['responses'][0]['faceAnnotations']
+            label = response['responses'][0]['labelAnnotations']
+
+            if len(face) > 1:
+                print('[Error] %s: It has more than 2 faces in a file' % image_file)
+                return None
+
+            roll_angle = face[0]['rollAngle']
+            pan_angle = face[0]['panAngle']
+            tilt_angle = face[0]['tiltAngle']
+            angle = [roll_angle, pan_angle, tilt_angle]
+
+            # check sunglasses
+            for l in label:
+                if 'sunglasses' in l['description']:
+                    print('[Error] %s: sunglass is detected' % image_file)
+                    return None
+
+            box = face[0]['fdBoundingPoly']['vertices']
+            left = box[0]['x']
+            top = box[1]['y']
+
+            right = box[2]['x']
+            bottom = box[2]['y']
+
+            rect = [left, top, right, bottom]
+
+            print("[Info] %s: Find face from in position %s and skew angle %s" % (image_file, rect, angle))
+            return rect
+        except Exception as e:
+            print('[Error] %s: cannot process file : %s' % (image_file, str(e)))
+
     def detect_face(self, image_file):
         try:
             with io.open(image_file, 'rb') as fd:
@@ -273,6 +333,31 @@ class FaceDetector():
 #     # detector.crop_face(inputfile, rect, outputfile)
 #
 #
-# if __name__ == "__main__":
-#     main(sys.argv)
+if __name__ == "__main__":
+    print("#### Cropping the faces ####")
+
+    detector = FaceDetector()
+
+    print("Whice thing you want to do?")
+    print("1 >> crop file")
+    print("2 >> crop files with directory path")
+    print("3 >> quit")
+    code = int(input(">> "))
+
+    if code is 1:
+        image_path = input("Location of image >>")
+        image_name = image_path.split('/')[-1]
+        rect = detector.detect_face_without_check_skew_angle(image_file=image_path)
+        detector.crop_face(image_file=image_name, rect=rect, outputfile="./outputCrop/"+image_name)
+    elif code is 2:
+        srcdir = input("Source directory >> ")
+        desdir = input("Destination directory >> ")
+        maxnum = int(input("Max number of samples per class >> "))
+        detector.crop_faces_rootdir(srcdir, desdir, maxnum)
+        pass
+    elif code is 3:
+        pass
+
+
+    print("#### Cropping Done ####")
 
