@@ -1,3 +1,5 @@
+** This project is on-going project, shouldn't working correctly **
+
 # AV Actor Finder
 Project for finding Adult Video actor with only picture but no name
 
@@ -30,6 +32,6 @@ All components build and written by python3 (3.6), so the python 2.x cannot be u
 4. Run the `train_with_CNN.py`
 
 # Reference
-[Codes for CNN and Cropping with Google Vision API usage](https://github.com/bwcho75/facerecognition)
+[Codes for CNN and Cropping with Google Vision API usage](https://github.com/bwcho75/facerecognition)  
 [Codes for image crawling from Google](https://github.com/hardikvasa/google-images-download/blob/master/google-images-download.py)
 
