@@ -260,7 +260,7 @@ def main(argv=None):
                 summary_writer.add_summary(summary_str, i)
                 summary_writer.flush()
 
-        saver.save(sess, 'face_recog')  # save session
+        saver.save(sess, './models/face_recog1')  # save session
         coord.request_stop()
         coord.join(threads)
         print('finish')
